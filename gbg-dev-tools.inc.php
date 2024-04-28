@@ -32,13 +32,14 @@ return [
                 '/phpstan.neon(.*)/i',                  // ignore recursively phpstan.neon* files
                 '/(!readme).*\.txt$/i',                 // ignore recursively *.txt files except readme
                 '/(.*)\.log$/i',                        // ignore *.log files
+                '/^[dir]\/readme.md/i',                  // ignore git-reserved readme.md
                 '/^[dir]\/tests/i',                     // ignore root folder /tests
                 '/^[dir]\/env/i',                       // ignore root folder /env
-                '/^[dir]\/examples/i',                       // ignore root folder /env
+                '/^[dir]\/examples/i',                  // ignore root folder /env
                 '/^[dir]\/bin/i',                       // ignore root folder /bin
                 '/^[dir]\/dist/i',                      // ignore root folder /dist
                 '/^[dir]\/tools/i',                     // ignore root folder /tools
-                '/^[dir]\/(.*).inc$/i',                   // ignore *.inc files
+                '/^[dir]\/(.*).inc$/i',                 // ignore *.inc files
             ]
         ]
     ],
