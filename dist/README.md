@@ -1,0 +1,1 @@
+The archive present in this folder is the WP plugin archive to install in your Wordpress environment

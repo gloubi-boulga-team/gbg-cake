@@ -1,0 +1,47 @@
+{
+    "name": "gloubi-boulga-team/gbg-cake",
+    "description": "Gloubi Boulga WP CakePHP 5 Adapter - Enjoy using CakePHP(tm) framework in your WP developments",
+    "keywords": [
+        "wordpress",
+        "wp",
+        "orm",
+        "gbg",
+        "framework",
+        "gloubi",
+        "boulga",
+        "cake",
+        "cakePHP"
+    ],
+    "homepage": "https://github.com/gloubi-boulga-team",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gloubi Boulga Team",
+            "email": "contact@gloubi.boulga.com",
+            "homepage": "https://github.com/gloubi-boulga-team"
+        }
+    ],
+    "type": "wordpress-plugin",
+    "support": {
+        "issues": "https://github.com/gloubi-boulga-team",
+        "source": "https://github.com/gloubi-boulga-team"
+    },
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "ext-mbstring": "*",
+        "cakephp/orm": "^5.0",
+        "cakephp/log": "^5.0",
+        "cakephp/cache": "^5.0",
+        "doctrine/inflector": "^2.0"
+    },
+    "require-dev": {
+        "jetbrains/phpstorm-attributes": "^1.0"
+    },
+    "autoload" : {
+        "psr-4" : {
+            "Gbg\\Cake5\\" : "src"
+        }
+    }
+}

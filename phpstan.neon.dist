@@ -1,0 +1,21 @@
+parameters:
+    level: max
+    checkGenericClassInNonGenericObjectType: false
+    scanFiles:
+        - ../../../wp-config.php
+    scanDirectories:
+        - ../../../wp-admin
+        - ../../../wp-includes
+        - vendor
+    paths:
+        - gbg-cake5-functions.php
+        - gbg-cake5-load-cache.php
+        - gbg-cake5-load-log.php
+        - gbg-cake5-load-orm.php
+        - gbg-cake5.php
+        - src
+        - tests
+        - config
+    excludePaths:
+        - */noop.php
+        - */tests/Orm/OrmTest.php

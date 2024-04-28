@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        bootstrap="bootstrap.php"
+        colors="true"
+        stopOnFailure="false"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+        cacheDirectory=".phpunit.cache"
+        displayDetailsOnIncompleteTests="true"
+        displayDetailsOnSkippedTests="true"
+        displayDetailsOnTestsThatTriggerDeprecations="true"
+        displayDetailsOnTestsThatTriggerErrors="true"
+        displayDetailsOnTestsThatTriggerNotices="true"
+        displayDetailsOnTestsThatTriggerWarnings="true"
+        testdox="false"
+        >
+  <testsuites>
+    <testsuite name="Orm">
+      <directory>./Orm</directory>
+    </testsuite>
+    <testsuite name="Wrapper">
+      <directory>./Wrapper</directory>
+    </testsuite>
+    <testsuite name="Http">
+      <directory>./Http</directory>
+    </testsuite>
+  </testsuites>
+  <!--coverage>
+    <report>
+      <html outputDirectory="build/coverage"/>
+      <text outputFile="build/coverage.txt"/>
+    </report>
+  </coverage-->
+  <source>
+    <include>
+      <directory suffix=".php">../src</directory>
+    </include>
+  </source>
+</phpunit>

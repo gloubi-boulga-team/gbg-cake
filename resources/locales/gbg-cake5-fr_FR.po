@@ -1,0 +1,53 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gbg-cakephp5\n"
+"POT-Creation-Date: 2024-03-16 20:52+0100\n"
+"PO-Revision-Date: 2024-03-16 20:53+0100\n"
+"Last-Translator: \n"
+"Language-Team: Gloubi Boulga team\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.4.2\n"
+"X-Poedit-Basepath: ../..\n"
+"X-Poedit-KeywordsList: __;__gbg;__gbgR\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: vendor\n"
+"X-Poedit-SearchPathExcluded-1: resources\n"
+
+#: gbg-cakephp5.php:100
+#, php-format
+msgid ""
+"Plugin « %1$s » can not run because obsolete PHP version %2$s is not "
+"supported (should be >=%3$s). Upgrade it as soon as possible !"
+msgstr ""
+"Le plugin « %1$s » ne peut pas fonctionner car la version de PHP obsolète "
+"%2$s n'est pas supportée (devrait être >=%3$s). À mettre à jour aussi vite "
+"que possible !"
+
+#: gbg-cakephp5.php:111
+#, php-format
+msgid ""
+"Plugin « %1$s » can not run because the required PHP extension « %2$s » is "
+"not active !"
+msgstr ""
+"Le plugin « %1$s » ne peut pas fonctionner car l'extension PHP requise "
+"« %2$s » n'est pas active !"
+
+#, php-format
+#~ msgid ""
+#~ "Your server doesn't meet minimal requirements for plugin %1$s« %2$s »%3$s"
+#~ msgstr ""
+#~ "Ton serveur ne répond pas aux prérequis pour le plugin %1$s« %2$s »%3$s"
+
+#, php-format
+#~ msgid ""
+#~ "Your site is running an %1$sinsecure version of PHP%2$s that is no longer "
+#~ "supported. Please contact your web hosting provider to update your PHP "
+#~ "version."
+#~ msgstr ""
+#~ "Ton site utilise une %1$sversion non sécurisée de PHP%2$s qui n'est plus "
+#~ "supportée. Contacte ton hébergeur pour mettre à jour cette version de PHP."
