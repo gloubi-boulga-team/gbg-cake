@@ -2,7 +2,7 @@
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/gloubi-boulga-team/gbg-cake/blob/5.dev/LICENSE)
 [![PHP](https://img.shields.io/badge/php->=8.1-blue.svg?style=flat-square)]()
-[![stable](https://img.shields.io/badge/stable-soon-7d7d7d.svg?style=flat-square)]()
+[![stable](https://img.shields.io/badge/stable-5.0.0-7d7d7d.svg?style=flat-square)]()
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%208-4ead51.svg?style=flat-square)](https://phpstan.org/)
 [![PHPCS](https://img.shields.io/badge/PHPCS-PSR12-4ead51.svg?style=flat-square)](https://github.com/PHPCSStandards/PHP_CodeSniffer/)
 [![PHPUnit](https://img.shields.io/badge/PHPUnit-passed-4ead51.svg?style=flat-square)](https://phpunit.de/index.html)
