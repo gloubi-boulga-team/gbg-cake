@@ -39,7 +39,8 @@ return [
                 '/^[dir]\/bin/i',                       // ignore root folder /bin
                 '/^[dir]\/dist/i',                      // ignore root folder /dist
                 '/^[dir]\/tools/i',                     // ignore root folder /tools
-                '/^[dir]\/(.*).inc$/i',                 // ignore *.inc files
+                '/^[dir]\/(.*)\.inc$/i',                 // ignore *.inc files
+                '/^[dir]\/gbg-dev-tools\.inc\.php$/i',                 // ignore *.inc files
             ]
         ]
     ],

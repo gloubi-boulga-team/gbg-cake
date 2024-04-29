@@ -3,41 +3,6 @@
 /**
  * Gloubi Boulga WP CakePHP(tm) 5 adapter
  *
- * This plugin is NOT part of CakePHP(tm) development framework
- * It is an independent plugin allowing WP developers to use CakePHP development framework functionalities
- *
- * Important : CakePHP ORM must not be called before plugins_loaded `event`
- *
- *
- * Events (filters) :
- *
- *
- *  - `Gbg/Cake5.Log.initLogger` : called prior to Logger initialization to get full Logger config
- *      @param array $configurations
- *      @return array $configurations
- *
- *  - `Gbg/Cake5.Log.initLoggerDefaultPath` : called prior to Logger initialization to get default log path
- *      @param string $defaultPath
- *      @return string $defaultPath
- *
- *  - `Gbg/Cake5.Cache.initCache` : called prior to Cacher initialization to get full Cache config
- *      @param array $configurations
- *      @return array $configurations
- *
- *  - `Gbg/Cake5.Orm.initTableLocator` : called prior to TableLocator initialization
- *      @param \Gbg\Cake5\ORM\TableLocator $tableLocator
- *      @return \Gbg\Cake5\ORM\TableLocator $tableLocator
- *
- *  - `Gbg/Cake5.Orm.initConnectionManager` : called prior to ConnectionManager configuration
- *      https://book.cakephp.org/5/fr/orm/database-basics.html#Cake\Datasource\ConnectionManager
- *      @param array $configurations
- *      @return array $configurations
- *
- *  - `Gbg/Cake5.Orm.initQueryLogger` : called prior to QueryLogger configuration
- *      @param array $configuration
- *      @return array $configuration
- *
- *
  * @wordpress-plugin
  *
  * Plugin Name:         Gloubi Boulga WP CakePHP 5 Adapter
@@ -49,12 +14,16 @@
  * License:             MIT
  * License URI:         https://opensource.org/licenses/mit-license.php
  * Text Domain:         gbg-cake5
- * Tested up to:        6.4
+ * Tested up to:        6.5
  * Requires at least:   6.2
  * Requires PHP:        8.1
  * Domain Path:         /resources/locales
  *
  * @package             Gbg\Cake5
+ * @since               5.0
+ *
+ *  This plugin is NOT part of CakePHP(tm) development framework
+ *  It is an independent plugin allowing WP developers to use CakePHP development framework functionalities
 */
 
 declare(strict_types=1);
