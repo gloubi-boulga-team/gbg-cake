@@ -1,4 +1,4 @@
-=== Wordpress CakePHP 5 adapter – Use a powerful ORM in Wordpress ===
+=== CakePHP 5 adapter – Use a powerful ORM in your WP developments ===
 
 Plugin Name:         Gloubi Boulga WP CakePHP 5 Adapter
 Plugin URI:          https://github.com/gloubi-boulga-team
