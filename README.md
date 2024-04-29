@@ -11,7 +11,7 @@
 This Wordpress plugin allows WP developers to use [CakePHP](https://cakephp.org) framework functionalities 
 such as [ORM (↗)](https://book.cakephp.org/5/en/orm.html), [Cache (↗)](https://book.cakephp.org/5/en/core-libraries/caching.html), [Log (↗)](https://book.cakephp.org/5/en/core-libraries/logging.html).
 
-This plugin is NOT part of CakePHP development framework and NOT managed by CakePHP developers. If you want to know more about CakePHP, follow this link https://book.cakephp.org/5/en/orm.html.
+This plugin is NOT part of CakePHP development framework and NOT managed by CakePHP developers.
 
 ---
 

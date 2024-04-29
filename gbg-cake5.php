@@ -20,7 +20,6 @@
  * Domain Path:         /resources/locales
  *
  * @package             Gbg\Cake5
- * @since               5.0
  *
  *  This plugin is NOT part of CakePHP(tm) development framework
  *  It is an independent plugin allowing WP developers to use CakePHP development framework functionalities
