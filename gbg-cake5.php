@@ -31,27 +31,6 @@ declare(strict_types=1);
 
 defined('ABSPATH') || die;
 
-if (!function_exists('gbgAdminNotice')) {
-
-    /**
-     * Add notice on the admin side of the Force
-     *
-     * @param string $level One of `info`, `success`, `warning`, `error`
-     * @param string|string[] $message Message to display
-     */
-    function gbgAdminNotice(string $level, string|array $message): void
-    {
-        if (is_array($message)) {
-            $message = implode('<br>', $message);
-        }
-        add_action('admin_notices', function () use ($level, $message) {
-            echo '<div class="notice notice-' . esc_html($level) . '">';
-            echo '<p>' . esc_html($message) . '</p>';
-            echo '</div>';
-        });
-    }
-}
-
 // check blocking requirements -----------------------------------------------------------------------------------------
 
 $phpMin = '8.1';
@@ -59,7 +38,9 @@ if (version_compare(PHP_VERSION, $phpMin, '<')) {
     /* translators: 1: plugin name, 2: actual PHP version, 3: expected PHP version */
     $message = sprintf(__('Plugin « %1$s » can not run because obsolete PHP version %2$s is not supported (should be >=%3$s). Upgrade it as soon as possible !', 'gbg-cake5'), 'Gloubi Boulga WP CakePHP 5 adapter', PHP_VERSION, $phpMin); // phpcs:ignore Generic.Files.LineLength
     do_action('Gbg/Cake5.failed', 'php-version', $message);
-    gbgAdminNotice('error', $message);
+    add_action('admin_notices', function () use ($message) {
+        echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+    });
     if (!is_admin() && !is_login()) {
         trigger_error(esc_html($message), E_ERROR);
     }
@@ -72,7 +53,9 @@ foreach ($extensions as $extension) {
         /* translators: 1: plugin name, 2: Extension name */
         $message = sprintf(__('Plugin « %1$s » can not run because the required PHP extension « %2$s » is not active !', 'gbg-cake5'), 'Gloubi Boulga WP CakePHP 5 adapter', $extension); // phpcs:ignore Generic.Files.LineLength
         do_action('Gbg/Cake5.failed', 'ext-missing', $message);
-        gbgAdminNotice('error', $message);
+        add_action('admin_notices', function () use ($message) {
+            echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+        });
         if (!is_admin() && !is_login()) {
             trigger_error(esc_html($message), E_ERROR);
         }
@@ -86,7 +69,7 @@ require_once 'gbg-cake5-functions.php';
 
 // empty composer memory to let other versions load their files (sharing same ids)
 $GLOBALS['__composer_autoload_files'] = [];
-require_once 'vendor/autoload.php';             // vendors that you should have acquired from a `composer install`
+require_once 'vendor/autoload.php';
 
 use Cake5\Core\Configure;
 use Cake5\Core\Configure\Engine\PhpConfig;
@@ -103,8 +86,8 @@ require_once 'gbg-cake5-load-log.php';
 require_once 'gbg-cake5-load-cache.php';
 require_once 'gbg-cake5-load-orm.php';
 
-
 $contentDir = Filesystem::normalize(WP_CONTENT_DIR);
+
 define('GBG_CAKE5_PATH', Filesystem::normalize(plugin_dir_path(__FILE__)));
 define('GBG_CAKE5_TEMP_PATH', Filesystem::concat($contentDir, '.gbg', 'tmp') . DS);
 define('GBG_CAKE5_LOG_PATH', Filesystem::concat($contentDir, '.gbg', 'log') . DS);

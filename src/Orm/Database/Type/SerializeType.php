@@ -83,6 +83,7 @@ class SerializeType extends BaseType implements BatchCastingInterface
      */
     public function toStatement(mixed $value, Driver $driver): int
     {
+        // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__PDO
         return \PDO::PARAM_STR;
     }
 
