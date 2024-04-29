@@ -6,7 +6,7 @@
  * @wordpress-plugin
  *
  * Plugin Name:         Gloubi Boulga WP CakePHP 5 Adapter
- * Plugin URI:          https://github.com/gloubi-boulga-team
+ * Plugin URI:          https://github.com/gloubi-boulga-team/gbg-cake
  * Description:         Embed CakePHP(tm) libraries (ORM, Utilility, Log, Cache...) into your WP extension
  * Version:             5.0.0
  * Author:              Gloubi Boulga Team
