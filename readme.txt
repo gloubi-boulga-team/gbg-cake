@@ -1,4 +1,4 @@
-=== Wordpress CakePHP 5 adapter – Use a powerful ORM in your WordPress plugin ===
+=== Wordpress CakePHP 5 adapter – Use a powerful ORM ===
 
 Plugin Name:         Gloubi Boulga WP CakePHP 5 Adapter
 Plugin URI:          https://github.com/gloubi-boulga-team
@@ -15,15 +15,17 @@ Requires PHP:        8.1
 Stable tag:          5.0.0
 Domain Path:         /resources/locales
 
+Allows WP developers to use CakePHP(tm) ORM, Cache, Log, and some utilities.
+
 == Description ==
 
 > Allows WP developers to use CakePHP(tm) ORM, Cache, Log, and some utilities.
 
+> This plugin is a SDK for developers, not intended to be used by end-users.
+
 ### Features ###
 
-This plugin is a SDK for developers, not intended to be used by end-users.
-
-It allows WP developers to use [CakePHP](https://cakephp.org) framework functionalities such as [ORM (↗)](https://book.cakephp.org/5/en/orm.html), [Cache (↗)](https://book.cakephp.org/5/en/core-libraries/caching.html), [Log (↗)](https://book.cakephp.org/5/en/core-libraries/logging.html).
+Allows WP developers to use [CakePHP](https://cakephp.org) framework functionalities such as [ORM (↗)](https://book.cakephp.org/5/en/orm.html), [Cache (↗)](https://book.cakephp.org/5/en/core-libraries/caching.html), [Log (↗)](https://book.cakephp.org/5/en/core-libraries/logging.html).
 
 Please see the Github page for the [list of features](https://github.com/gloubi-boulga-team/gbg-cake/).
 
