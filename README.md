@@ -1,4 +1,4 @@
-## Gbg Wordpress CakePHP 5 adapter -- Wordpress plugin
+## Wordpress CakePHP 5 adapter -- Wordpress plugin
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/gloubi-boulga-team/gbg-cake/blob/5.dev/LICENSE)
 [![PHP](https://img.shields.io/badge/php->=8.1-blue.svg?style=flat-square)]()
