@@ -45,7 +45,7 @@ download/install/activate the WP plugin from the archive `/dist/gbg-cake5.zip`**
 
 ### • Create/manipulate queries <a name="cakephp-first-query"></a>
 
- Keep in mind that this code is only for demo, for `users`, `usermeta`, `posts`, it is recommended to use Wordpress functions... (or not ?)
+Keep in mind that this code is only for demo, for `users`, `usermeta`, `posts`, it is highly recommended to use Wordpress functions.
 
 ```
 add_action('Gbg/Cake5.Orm.loaded', function() {
