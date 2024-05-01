@@ -21,7 +21,6 @@ declare(strict_types=1);
 include_once 'TestCase.php';
 
 error_reporting(E_ALL);
-
 ini_set('memory_limit', '1G');
 
 const GBG_TESTS_RUNNING = true;

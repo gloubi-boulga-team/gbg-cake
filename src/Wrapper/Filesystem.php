@@ -265,7 +265,9 @@ class Filesystem
         $path = static::normalize($path, $delimiter);
         $basePath = static::normalize($basePath, $delimiter);
 
-        return !Text::startsWith($path, $basePath) ? static::concat($basePath, $path) : $path;
+        return !Text::startsWith($path, $basePath) ?
+            static::concat($basePath, $path) :
+            $path;
     }
 
     /**
