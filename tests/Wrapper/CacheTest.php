@@ -352,7 +352,7 @@ class CacheTest extends TestCase
         $cacheStats = $cache->getStats();
         // @todo : calculate rather than use fixed values
         $this->assertEquals(count($files), $cacheStats['count']);
-        $this->assertEquals('2020-01-01 00:00:00', $cacheStats['oldest_std']);
+        $this->assertEquals('2020-01-01 00:00:00', $cacheStats['oldestStd']);
         $this->assertEquals('98KB', $cacheStats['biggest']);
     }
 

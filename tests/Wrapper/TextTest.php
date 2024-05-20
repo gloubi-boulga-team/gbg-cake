@@ -842,6 +842,12 @@ class TextTest extends TestCase
             [
                 'ensureTrailing()',
                 [Text::class, 'ensureTrailing'],
+                ['💐 ειρήνη και αγάπη ☮️', '☮️'],
+                '💐 ειρήνη και αγάπη ☮️'
+            ],
+            [
+                'ensureTrailing()',
+                [Text::class, 'ensureTrailing'],
                 ['💐 ειρήνη και αγάπη ☮️'],
                 '💐 ειρήνη και αγάπη ☮️'
             ],
@@ -1051,6 +1057,10 @@ class TextTest extends TestCase
 
     public function testReversePrintR(): void
     {
+
+        // test fake string
+        $this->assertEquals('xyz', Text::reversePrintR('xyz'));
+
         $expected1 = ['x', 'entity' => [
             'name' => 'John',
             'age' => 25,
@@ -1116,7 +1126,11 @@ class TextTest extends TestCase
         $value = 'noDate';
         $this->assertEquals(false, Text::isDate($value, 'Y-m-d H:i:s'));
 
-        $value = 'x' . chr(0);
+        $value = chr(0) . 'x' . chr(0);
+        $this->assertEquals(false, Text::isDate($value));
+        $value = "\0";
+        $this->assertEquals(false, Text::isDate($value));
+        $value = "\0date\0date\0";
         $this->assertEquals(false, Text::isDate($value));
 
         $this->assertEquals(false, Text::isSerialized('$value'));

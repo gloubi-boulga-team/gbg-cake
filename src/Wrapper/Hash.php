@@ -122,12 +122,12 @@ class Hash extends \Cake5\Utility\Hash
 
                     // if $options['variables'] is set, then at least one
                     // of found placeholders must be in $options['variables']
-//                    if (!empty($options['variables'])) {
-//                        $keywordExplodedTrimmed = array_map('trim', $keywordExploded);
-//                        if (!array_intersect($keywordExplodedTrimmed, $options['variables'])) {
-//                            continue;
-//                        }
-//                    }
+                    //                    if (!empty($options['variables'])) {
+                    //                        $keywordExplodedTrimmed = array_map('trim', $keywordExploded);
+                    //                        if (!array_intersect($keywordExplodedTrimmed, $options['variables'])) {
+                    //                            continue;
+                    //                        }
+                    //                    }
 
                     foreach ($keywordExploded as $keywordItem) {
                         // placeholder can contain spaces that will be removed if nothing found
@@ -181,5 +181,26 @@ class Hash extends \Cake5\Utility\Hash
         }
 
         return $formula;
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @param ArrayAccess|array<mixed> $data
+     * @param array<string>|string|int|null $path
+     * @param mixed|null $default
+     *
+     * @return mixed
+     */
+    public static function get(
+        ArrayAccess|array $data,
+        array|string|int|null $path,
+        mixed $default = null
+    ): mixed {
+        // avoid that a key literally named '0.1.2' is not found
+        if (is_string($path) && !empty($data) && isset($data[$path])) {
+            return $data[$path];
+        }
+        return parent::get($data, $path, $default);
     }
 }

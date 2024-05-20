@@ -87,19 +87,28 @@ class TableLocator extends \Cake5\ORM\Locator\TableLocator
     }
 
     /**
+     * Reset table cache
+     *
+     * @return void
+     */
+    public static function refreshTables(): void
+    {
+        static::$tableList = [];
+    }
+
+    /**
      * List all database tables of a connection
      *
-     * @param ConnectionInterface|string $connection
+     * @param ConnectionInterface|null $connection
      * @param bool $refresh
      *
      * @return array<string>
      * @throws Exception
      */
-    public static function listTables(ConnectionInterface|string $connection = 'default', bool $refresh = false): array
+    public static function listTables(ConnectionInterface $connection = null, bool $refresh = false): array
     {
-        if (is_string($connection)) {
-            $connection = ConnectionManager::get($connection);
-        }
+        $connection = $connection ?? ConnectionManager::get('default');
+
         /** @var Connection $connection */
         $connectionName = $connection->configName();
         $cache = Cache::get('Gbg/Cake5.dbSchemas');
@@ -140,7 +149,7 @@ class TableLocator extends \Cake5\ORM\Locator\TableLocator
             $connection = $from->getConnection();
             $from = $from->getTable();
         } else {
-            $connection = ConnectionManager::get($options['connection'] ?? 'default');
+            $connection = $options['connection'] ?: ConnectionManager::get('default');
         }
 
         /** @var Connection $connection */
@@ -273,6 +282,21 @@ class TableLocator extends \Cake5\ORM\Locator\TableLocator
     //
     //        return $prefix . implode('_', $pluginParts) . '_' . strtolower(Inflector::underscore($tablePart));
     //    }
+
+    /**
+     * @param string $tableName
+     * @param ConnectionInterface|null $connection
+     * @param bool $refresh
+     * @return bool
+     * @throws Exception
+     */
+    public static function tableExists(
+        string $tableName,
+        ConnectionInterface $connection = null,
+        bool $refresh = false
+    ): bool {
+        return in_array($tableName, static::listTables($connection, $refresh));
+    }
 
     /**
      * Resolve real table name for an alias (doesn't check the table existence)

@@ -381,7 +381,7 @@ class Text
         $currentString = $string;
         $curPos = 0;
 
-        while ($between = static::getBetween($currentString, $left, $right)) {
+        while (($between = static::getBetween($currentString, $left, $right)) !== null) {
             $curLocalPos = mb_strpos($currentString, $left . $between . $right);
             $curPos = $curPos + $curLocalPos + mb_strlen($left);
 

@@ -6,7 +6,7 @@
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%208-4ead51.svg?style=flat-square)](https://phpstan.org/)
 [![PHPCS](https://img.shields.io/badge/PHPCS-PSR12-4ead51.svg?style=flat-square)](https://github.com/PHPCSStandards/PHP_CodeSniffer/)
 [![PHPUnit](https://img.shields.io/badge/PHPUnit-passed-4ead51.svg?style=flat-square)](https://phpunit.de/index.html)
-[![coverage](https://img.shields.io/badge/coverage-96.95%25-4ead51.svg?style=flat-square)](https://phpunit.de/index.html)
+[![coverage](https://img.shields.io/badge/coverage-97.61%25-4ead51.svg?style=flat-square)](https://phpunit.de/index.html)
 
 This Wordpress plugin allows WP developers to use [CakePHP](https://cakephp.org) framework functionalities 
 such as [ORM (↗)](https://book.cakephp.org/5/en/orm.html), [Cache (↗)](https://book.cakephp.org/5/en/core-libraries/caching.html), [Log (↗)](https://book.cakephp.org/5/en/core-libraries/logging.html).

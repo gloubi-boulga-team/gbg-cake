@@ -374,10 +374,7 @@ class Log
 
         $deleted = 0;
         foreach ($files as $file) {
-            try {
-                wp_delete_file($file);
-            } catch (Throwable $ex) {
-            }
+            wp_delete_file($file);
             $deleted++;
         }
 

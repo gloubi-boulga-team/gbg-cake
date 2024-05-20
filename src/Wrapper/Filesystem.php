@@ -20,6 +20,8 @@ namespace Gbg\Cake5\Wrapper;
 
 class Filesystem
 {
+    public static bool $debug = false;
+
     /**
      * Explode path - path should only contain ascii chars
      *
@@ -48,6 +50,7 @@ class Filesystem
 
     /**
      * Concatenate path parts
+     * Return a normalized path
      *
      * @param string|null $basePath
      * @param string|null ...$additionalPath
@@ -58,27 +61,12 @@ class Filesystem
     {
         /** @var array<?string> $paths */
         $paths = func_get_args();
-        $result = [];
-        $i = 0;
 
-        foreach ($paths as $path) {
-            if ($path === null || strlen($path) === 0) {
-                continue;
-            }
+        $paths = array_values(array_filter($paths, function ($path) {
+            return is_string($path) && strlen($path) > 0;
+        }));
 
-            $path = static::normalize($path);
-            if ($i !== 0 && str_starts_with($path, DIRECTORY_SEPARATOR)) {
-                $path = substr($path, 1);
-            }
-            if ($i !== count($paths) - 1 && str_ends_with($path, DIRECTORY_SEPARATOR)) {
-                $path = substr($path, 0, strlen($path) - 1);
-            }
-
-            $result[] = $path;
-            $i++;
-        }
-
-        return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, implode(DIRECTORY_SEPARATOR, $result));
+        return static::normalize(implode(DIRECTORY_SEPARATOR, $paths));
     }
 
     /**
@@ -98,13 +86,59 @@ class Filesystem
      * Replace backslash or forward slash with the accurate separator
      *
      * @param string $path The path to normalize
-     * @param string $delimiter
+     * @param string $separator
      *
      * @return string
      */
-    public static function normalize(string $path, string $delimiter = DIRECTORY_SEPARATOR): string
+    public static function normalize(string $path, string $separator = DIRECTORY_SEPARATOR): string
     {
-        return str_replace(['/', '\\'], $delimiter, $path);
+        return static::sanitizeDoubleSeparators(
+            static::normalizeSeparators($path, $separator),
+            $separator
+        );
+    }
+
+    public static function normalizeSeparators(string $path, string $separator = DIRECTORY_SEPARATOR): string
+    {
+        return str_replace(['/', '\\'], $separator, $path);
+    }
+
+    /**
+     * Return value is normalized
+     *
+     * @param string $string Must be normalized
+     * @param string $separator
+     *
+     * @return string
+     */
+    public static function sanitizeDoubleSeparators(string $string, string $separator = DIRECTORY_SEPARATOR): string
+    {
+        // parse eventual starting protocol containing double separators (can also be a Windows network path start)
+        $separatorPattern = preg_quote($separator, '/');
+        // parse http:// or file:// or \\server\share\ ...
+        $pattern = "/^((?:[a-zA-Z0-9]+[:])?[:]?[$separatorPattern]{2})(.*)/";
+        $protocol = '';
+
+        preg_match_all($pattern, $string, $parts);
+        if (!empty($parts[1][0])) {
+            $protocol = $parts[1][0];
+            $string = $parts[2][0];
+        }
+
+        $lastString = $string;
+        $i = 0;
+        while ($i++ < 256 && (($string = str_replace($separator . $separator, $separator, $string)) !== $lastString)) {
+            $lastString = $string;
+        }
+
+        $i = 0;
+        if ($protocol) {
+            while (str_starts_with($string, $separator) && $i++ < 256) {
+                $string = substr($string, strlen($separator));
+            }
+        }
+
+        return  $protocol . $string;
     }
 
     /**
@@ -236,38 +270,76 @@ class Filesystem
     }
 
     /**
-     * Ensure a path is relative to another one
+     * Ensure a path is relative to another one (if it is not, then make it relative).
+     * Return value is normalized using $separator.
      *
      * @param string $path
      * @param string $basePath
-     * @param string $delimiter
+     * @param string $separator
      *
      * @return string
      */
-    public static function ensureRelative(string $path, string $basePath = ABSPATH, string $delimiter = DS): string
+    public static function ensureRelative(string $path, string $basePath = ABSPATH, string $separator = DS): string
     {
-        $path = static::normalize($path, $delimiter);
-        $basePath = static::normalize($basePath, $delimiter);
-        return static::normalize(str_replace($basePath, '', $path), $delimiter);
+        foreach (['path', 'basePath'] as $var) {
+            $varParts = $var . 'Parts';
+            $$var = static::normalize($$var, $separator);
+            $$varParts = explode($separator, $$var);
+            while ($$varParts[count($$varParts) - 1] === '') {
+                array_pop($$varParts);
+            }
+        }
+
+        /** @phpstan-ignore-next-line -- variable declared */
+        foreach ($basePathParts as $k => $base) {
+            /** @phpstan-ignore-next-line -- variable declared */
+            if ($pathParts[$k] !== $base) {
+                return $path;
+            }
+        }
+
+        return Text::removeLeading($path, $basePath);
     }
 
     /**
-     * Ensure a path is absolute (and if it is not, then make it absolute)
+     * Ensure a path is absolute (if it is not, then make it absolute).
+     * Return value is normalized using $separator.
      *
      * @param string $path
-     * @param string $delimiter
+     * @param string $separator
      * @param string $basePath
      *
      * @return string
      */
-    public static function ensureAbsolute(string $path, string $basePath = ABSPATH, string $delimiter = DS): string
+    public static function ensureAbsolute(string $path, string $basePath = ABSPATH, string $separator = DS): string
     {
-        $path = static::normalize($path, $delimiter);
-        $basePath = static::normalize($basePath, $delimiter);
+        $path = static::normalize($path, $separator);
+        $basePath = static::normalize($basePath, $separator);
 
-        return !Text::startsWith($path, $basePath) ?
-            static::concat($basePath, $path) :
-            $path;
+        if ($basePath === $separator) {
+            return Text::ensureLeading($path, $separator);
+        }
+
+        foreach (['path', 'basePath'] as $var) {
+            $varParts = $var . 'Parts';
+            $$var = static::normalize($$var, $separator);
+            $$varParts = explode($separator, $$var);
+            while ($$varParts[count($$varParts) - 1] === '') {
+                array_pop($$varParts);
+            }
+        }
+
+        /** @phpstan-ignore-next-line -- variable declared */
+        foreach ($basePathParts as $k => $base) {
+            /** @phpstan-ignore-next-line -- variable declared */
+            if ($pathParts[$k] !== $base) {
+                return $separator === '/' ?
+                    Filesystem::concatSlash($basePath, $path) :
+                    Filesystem::concat($basePath, $path);
+            }
+        }
+
+        return $path;
     }
 
     /**
@@ -313,24 +385,20 @@ class Filesystem
             return false;
         }
 
-        try {
-            $htaccess = static::concat($path, '.htaccess');
-            if (file_exists($htaccess)) {
-                wp_delete_file($htaccess);
-            }
+        $htaccess = static::concat($path, '.htaccess');
+        if (file_exists($htaccess)) {
+            wp_delete_file($htaccess);
+        }
 
-            $items = static::list($path, '*', null, 1);
+        $items = static::list($path, '*', null, 1);
 
-            for ($i = count($items) - 1; $i >= 0; $i--) {
-                $item = $items[$i];
-                if ($recursive && is_dir($item)) {
-                    static::removeDir($item);
-                } elseif (is_file($item)) {
-                    wp_delete_file($item);
-                }
+        for ($i = count($items) - 1; $i >= 0; $i--) {
+            $item = $items[$i];
+            if ($recursive && is_dir($item)) {
+                static::removeDir($item);
+            } elseif (is_file($item)) {
+                wp_delete_file($item);
             }
-        } catch (\Exception $ex) {
-            return false;
         }
 
         return true;
@@ -351,9 +419,7 @@ class Filesystem
             return true;
         }
 
-        $duration = str_starts_with($duration, '+') ? substr($duration, 1) : $duration;
-        $duration = str_starts_with($duration, '-') ? substr($duration, 1) : $duration;
-        $duration = '-' . $duration;
+        $duration = Text::ensureLeading(Text::removeLeading($duration, ['+', '-']), '-');
         $minTime = strtotime($duration);
         foreach ((array)$func as $prop) {
             if (!is_callable($prop)) {
@@ -432,10 +498,10 @@ class Filesystem
         /** @var string $tf */
         $tf = get_option('time_format');
 
-        $result['oldest_wp'] = wp_date("$df $tf", $result['oldest'] ?: null);
-        $result['newest_wp'] = wp_date("$df $tf", $result['newest'] ?: null);
-        $result['oldest_std'] = gmdate('Y-m-d H:i:s', $result['oldest'] ?: null);
-        $result['newest_std'] = gmdate('Y-m-d H:i:s', $result['newest'] ?: null);
+        $result['oldestWp'] = wp_date("$df $tf", $result['oldest'] ?: null);
+        $result['newestWp'] = wp_date("$df $tf", $result['newest'] ?: null);
+        $result['oldestStd'] = gmdate('Y-m-d H:i:s', $result['oldest'] ?: null);
+        $result['newestStd'] = gmdate('Y-m-d H:i:s', $result['newest'] ?: null);
 
         $result['totalSize'] = Text::parseBytesToSize($result['totalSize']);
         $result['biggest'] = Text::parseBytesToSize($result['biggest']);

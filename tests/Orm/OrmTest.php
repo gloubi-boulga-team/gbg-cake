@@ -149,39 +149,39 @@ class OrmTest extends TestCase
 
         // test `listTables` function ----------------------------------------------------------------------------------
 
-        $tables = TableLocator::listTables(ConnectionManager::get('default'), true);
+        $defaultConnection = ConnectionManager::get('default');
+        $tables = TableLocator::listTables($defaultConnection, true);
         $this->assertTrue(in_array('wp_gbg_cake5_test_orm_authors', $tables, true));
         $this->assertTrue(in_array('wp_options', $tables, true));
         $this->assertFalse(in_array('wp_should_not_do_that!!!', $tables, true));
 
-        $tables = TableLocator::listTables('default', true);
+        $tables = TableLocator::listTables($defaultConnection, true);
         $this->assertTrue(in_array('wp_gbg_cake5_test_orm_authors', $tables, true));
         $this->assertTrue(in_array('wp_options', $tables, true));
         $this->assertFalse(in_array('wp_should_not_do_that!!!', $tables, true));
 
         TableLocator::copyTable('wp_gbg_cake5_test_orm_authors', 'wp_gbg_cake5_test_orm_authors2');
-        $tables = TableLocator::listTables('default', true);
+        $tables = TableLocator::listTables($defaultConnection, true);
         $this->assertTrue(in_array('wp_gbg_cake5_test_orm_authors2', $tables, true));
 
         TableLocator::dropTable('wp_gbg_cake5_test_orm_authors2');
-        $tables = TableLocator::listTables('default', true);
+        $tables = TableLocator::listTables($defaultConnection, true);
         $this->assertFalse(in_array('wp_gbg_cake5_test_orm_authors2', $tables, true));
 
         $table = TableRegistry::getTableLocator()->get('Gbg/Cake5.TestOrmAuthors');
         TableLocator::copyTable($table, 'wp_gbg_cake5_test_orm_authors2');
-        $tables = TableLocator::listTables('default', true);
+        $tables = $locator->listTables($defaultConnection, true);
         $this->assertTrue(in_array('wp_gbg_cake5_test_orm_authors2', $tables, true));
 
         $table = TableRegistry::getTableLocator()->get('Gbg/Cake5.TestOrmAuthors2');
         TableLocator::dropTable($table);
-        $tables = TableLocator::listTables('default', true);
+        $tables = TableLocator::listTables($defaultConnection, true);
         $this->assertFalse(in_array('wp_gbg_cake5_test_orm_authors2', $tables, true));
 
-        $connection = ConnectionManager::get('default');
-        $name = TableLocator::resolveTableName('Users', 'Wp', $connection);
+        $name = TableLocator::resolveTableName('Users', 'Wp', $defaultConnection);
         $this->assertSame('wp_users', $name);
 
-        $name = TableLocator::resolveTableName('Wp.Users', 'Wp', $connection);
+        $name = TableLocator::resolveTableName('Wp.Users', 'Wp', $defaultConnection);
         $this->assertSame('wp_users', $name);
 
         $class = TableLocator::resolveClassName(UsersTable::class, []);
@@ -444,11 +444,12 @@ class OrmTest extends TestCase
         /**
          * @var Connection $connection
          */
+        $locator = TableRegistry::getTableLocator();
         $connection = ConnectionManager::get('default');
-        $tables = TableLocator::listTables($connection, true);
-        $tableRealName = TableLocator::resolveTableName($tableAlias, 'Gbg/Cake5', $connection);
+        $tables = $locator->listTables($connection, true);
+        $tableRealName = $locator->resolveTableName($tableAlias, 'Gbg/Cake5', $connection);
         if (in_array($tableRealName, $tables, true)) {
-            TableLocator::dropTable($tableRealName, $connection);
+            $locator->dropTable($tableRealName, $connection);
         }
 
         $commonFields = [

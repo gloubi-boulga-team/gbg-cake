@@ -78,7 +78,7 @@ class QueryTools
                 return serialize($p);
             } elseif ($binding['type'] === 'ip') {
                 return $p;
-            } elseif ($p instanceof DateTime) {
+            } elseif ($p instanceof \DateTimeInterface) {
                 return $p->format('Y-m-d H:i:s');
             } elseif (is_bool($p)) {
                 return $p ? '1' : '0';

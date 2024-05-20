@@ -177,6 +177,7 @@ class Cache
     {
 
         $loadedKey = $key . '-' . print_r($config, true);
+
         if ($cache = static::$loadedCaches[$loadedKey] ?? null) {
             return $cache;
         }
@@ -411,6 +412,7 @@ class Cache
         if (!strlen($key)) {
             return $this;
         }
+
         if ($subKey) {
             $actualValue = @CakeCache::read($this->normalizeKey($key), $this->configKey);
             if (!is_array($actualValue)) {
@@ -537,10 +539,7 @@ class Cache
         // Deleting all the files in the list
         foreach ($files as $file) {
             if (is_file($file)) {
-                try {
-                    wp_delete_file($file);
-                } catch (Exception $ex) {
-                }
+                wp_delete_file($file);
             }
         }
     }

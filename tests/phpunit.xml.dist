@@ -18,19 +18,19 @@
     <testsuite name="Orm">
       <directory>./Orm</directory>
     </testsuite>
-    <testsuite name="Wrapper">
-      <directory>./Wrapper</directory>
-    </testsuite>
     <testsuite name="Http">
       <directory>./Http</directory>
     </testsuite>
+    <testsuite name="Wrapper">
+      <directory>./Wrapper</directory>
+    </testsuite>
   </testsuites>
-  <!--coverage>
+  <coverage>
     <report>
       <html outputDirectory="build/coverage"/>
       <text outputFile="build/coverage.txt"/>
     </report>
-  </coverage-->
+  </coverage>
   <source>
     <include>
       <directory suffix=".php">../src</directory>

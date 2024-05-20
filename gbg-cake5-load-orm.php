@@ -21,6 +21,8 @@ declare(strict_types=1);
 use Cake5\Core\Configure;
 use Cake5\Database\TypeFactory;
 use Cake5\Datasource\ConnectionManager;
+use Cake5\Event\Event;
+use Cake5\Event\EventManager;
 use Cake5\ORM\Locator\LocatorInterface;
 use Cake5\ORM\TableRegistry;
 use Cake5\Utility\Inflector;
@@ -116,5 +118,12 @@ if (!function_exists('gbgCake5_LoadOrm')) {
         }
 
         do_action('Gbg/Cake5.Orm.loaded', $configurations);
+        $event = EventManager::instance()->dispatch(
+            new Event(
+                'Gbg/Cake5.Orm.loaded',
+                null,
+                ['configurations' => $configurations]
+            )
+        );
     }
 }

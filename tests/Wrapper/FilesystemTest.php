@@ -140,6 +140,36 @@ class FilesystemTest extends TestCase
         Filesystem::removeDir(static::getRootPath(), true);
     }
 
+    public function testSanitizeDoubleSeparators(): void
+    {
+        $tests = [
+            '/x/y/.'                             => '/x/y/.',
+            '\\\\x\y\.'                          => '//x/y/.',
+            '\\x\y\.'                            => '/x/y/.',
+            'http://x/y/.'                       => 'http://x/y/.',
+            'http://x/y///.'                      => 'http://x/y/.',
+            'http://x/y////////////////////z/.'  => 'http://x/y/z/.',
+            'ssh2://x//////y/z//////./'          => 'ssh2://x/y/z/./',
+            '/x//y/.'                            => '/x/y/.',
+            '//x//y/.'                           => '//x/y/.',
+            '//x//y///////////z/'                => '//x/y/z/',
+            '\\x\\\\y\\.'                        => '/x/y/.',
+            '\\\\x\\\\y\\.'                      => '//x/y/.',
+            '\\\\x\\\\y\\\\\\\\\\\\\\\\\\\\\\z/' => '//x/y/z/',
+            '\\x\\\\y\\\\\\\\\\\\\\\\\\\\\\z/'   => '/x/y/z/',
+            '\\\\\\\\\\\\\\\\\\\\\\\\\\x\\\\y\\z/' => '//x/y/z/',
+        ];
+
+        //Filesystem::$debug = true;
+        foreach ($tests as $test => $expected) {
+            $test1 = str_replace(['\\', '/'], '/', Filesystem::normalize($test, '/'));
+            $this->assertSame($expected, Filesystem::sanitizeDoubleSeparators($test1, '/'), 'test ' . $test);
+            $test2 = str_replace(['\\', '/'], '\\', Filesystem::normalize($test, '\\'));
+            $expected = str_replace(['\\', '/'], '\\', $expected);
+            $this->assertSame($expected, Filesystem::sanitizeDoubleSeparators($test2, '\\'), 'test ' . $test);
+        }
+    }
+
     /**
      * @test Filesystem::concat
      *
@@ -147,12 +177,12 @@ class FilesystemTest extends TestCase
      */
     public function testConcat(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-
         $tests = [
-            ['args' => ['x', 'y', 'z'], 'result' => 'x' . $ds . 'y' . $ds . 'z'],
-            ['args' => ['', null, 'x', '/', 'y', '/'], 'result' => 'x' . $ds . $ds . 'y' . $ds],
-            ['args' => ['', null, '/x', '/', '/y/', '/'], 'result' => $ds . 'x' . $ds . $ds . 'y' . $ds],
+            ['args' => ['x', 'y', 'z'], 'result' => 'x' . DS . 'y' . DS . 'z'],
+            ['args' => ['', null, 'x', '/', '/', 'y', '/'], 'result' => 'x' . DS . 'y' . DS],
+            ['args' => ['', null, '/x', '/', '/', '/', '/y/', '/'], 'result' => DS . 'x' . DS . 'y' . DS],
+            ['args' => ['/', null, '/x', '/', '/', '/', '/y/', '/'], 'result' => DS . DS . 'x' . DS . 'y' . DS],
+            ['args' => ['/', '', '/', '//x', '/', '/', '/', '/y/', '/'], 'result' => DS . DS . 'x' . DS . 'y' . DS],
         ];
 
         foreach ($tests as $k => $test) {
@@ -172,8 +202,8 @@ class FilesystemTest extends TestCase
 
         $tests = [
             ['args' => ['x0', 'y', 'z'], 'result' => 'x0' . $ds . 'y' . $ds . 'z'],
-            ['args' => ['', null, 'x1', '/', 'y', '/'], 'result' => 'x1' . $ds . $ds . 'y' . $ds],
-            ['args' => ['', null, '/x2', '/', 'y', '/'], 'result' => $ds . 'x2' . $ds . $ds . 'y' . $ds],
+            ['args' => ['', null, 'x1', '/', '/', 'y', '/'], 'result' => 'x1' . $ds . 'y' . $ds],
+            ['args' => ['', null, '/x2', '/', '/', '/', 'y', '/'], 'result' => $ds . 'x2' . $ds . 'y' . $ds],
         ];
 
         foreach ($tests as $k => $test) {
@@ -209,12 +239,35 @@ class FilesystemTest extends TestCase
     public function testNormalizePath(): void
     {
         $tests = [
+            ['args' => ['', '/'], 'result' => ''],
+            ['args' => ['https://toto/titi//tata//x', '/'], 'result' => 'https://toto/titi/tata/x'],
+            ['args' => ['https2://toto/titi//tata//x', '/'], 'result' => 'https2://toto/titi/tata/x'],
+            ['args' => ['https2:///toto/titi//tata//x', '/'], 'result' => 'https2://toto/titi/tata/x'],
+            ['args' => ['https2:////toto/titi//tata//x', '/'], 'result' => 'https2://toto/titi/tata/x'],
+            ['args' => ['://toto/titi////tata//x', '/'], 'result' => '://toto/titi/tata/x'],
+            ['args' => [':///toto/titi////tata//x', '/'], 'result' => '://toto/titi/tata/x'],
+            ['args' => [':////toto/titi////tata//x', '/'], 'result' => '://toto/titi/tata/x'],
+            ['args' => ['://///toto/titi////tata//x', '/'], 'result' => '://toto/titi/tata/x'],
+            ['args' => ['///toto/titi////tata//x', '/'], 'result' => '//toto/titi/tata/x'],
+            ['args' => ['/////toto/titi////tata//x', '/'], 'result' => '//toto/titi/tata/x'],
             ['args' => ['x/y/z\\a\\a\\b\\', '/'], 'result' => 'x/y/z/a/a/b/'],
-            ['args' => ['/x/y/z\\\\a\\a\\b\\', '/'], 'result' => '/x/y/z//a/a/b/'],
-            ['args' => ['/x/y/z\\\\\\a\\a\\b\\', '/'], 'result' => '/x/y/z///a/a/b/'],
+            ['args' => ['/x/y/z\\\\a\\a\\b\\', '/'], 'result' => '/x/y/z/a/a/b/'],
+            ['args' => ['/x/y/z\\\\\\a\\a\\b\\', '/'], 'result' => '/x/y/z/a/a/b/'],
             ['args' => ['x/y/z\\a\\a\\b\\', '\\'], 'result' => 'x\\y\\z\\a\\a\\b\\'],
-            ['args' => ['/x/y/z\\\\a\\a\\b\\', '\\'], 'result' => '\\x\\y\\z\\\\a\\a\\b\\'],
-            ['args' => ['/x/y/z\\\\\\a\\a\\b\\', '\\'], 'result' => '\\x\\y\\z\\\\\\a\\a\\b\\'],
+            ['args' => ['/x/y/z\\\\a\\a\\b\\', '\\'], 'result' => '\\x\\y\\z\\a\\a\\b\\'],
+            ['args' => ['/x/y/z\\\\\\a\\a\\b\\', '\\'], 'result' => '\\x\\y\\z\\a\\a\\b\\'],
+            ['args' => ['C:\\test//toto//titi//.', '\\'], 'result' => 'C:\\test\\toto\\titi\\.'],
+            ['args' => ['C:\\\\test//toto//titi//.', '\\'], 'result' => 'C:\\\\test\\toto\\titi\\.'],
+            ['args' => ['\\\\server\\\\Path//toto//titi//', '\\'], 'result' => '\\\\server\\Path\\toto\\titi\\'],
+            ['args' => ['\\\\\\server\\\\Path//toto//titi//', '\\'], 'result' => '\\\\server\\Path\\toto\\titi\\'],
+            ['args' => ['\\\\\\\\\\server\\\\Path//toto//titi//', '\\'], 'result' => '\\\\server\\Path\\toto\\titi\\'],
+
+            ['args' => ['C:\\test//toto//titi//.', '/'], 'result' => 'C:/test/toto/titi/.'],
+            ['args' => ['C:\\\\test//toto//titi//.', '/'], 'result' => 'C://test/toto/titi/.'],
+            ['args' => ['\\\\server\\\\Path//toto//titi//', '/'], 'result' => '//server/Path/toto/titi/'],
+            ['args' => ['\\\\\\server\\\\Path//toto//titi//', '/'], 'result' => '//server/Path/toto/titi/'],
+            ['args' => ['\\\\\\\\\\server\\\\Path//toto//titi//', '/'], 'result' => '//server/Path/toto/titi/'],
+
         ];
 
         foreach ($tests as $k => $test) {
@@ -345,6 +398,12 @@ class FilesystemTest extends TestCase
         $items = Filesystem::list($path, '*', null, PHP_INT_MAX);
         $countBefore = count(Filesystem::list($path, '*', null, PHP_INT_MAX));
 
+        $result = Filesystem::emptyDir('/not-existing-path', false);
+        $this->assertSame(false, $result);
+
+        $result = Filesystem::emptyDir('/not-existing-path', true);
+        $this->assertSame(false, $result);
+
         Filesystem::emptyDir($path, false);
         $countAfter = count(Filesystem::list($path, '*', null, PHP_INT_MAX));
 
@@ -358,6 +417,19 @@ class FilesystemTest extends TestCase
         Filesystem::removeDir($path, true);
         $countAfter = count(Filesystem::list($path, '*', null, PHP_INT_MAX));
         $this->assertEquals(0, $countAfter);
+
+        // test empty dir with .htaccess and subdir
+        $path2 = Filesystem::concat($rootPath, 'testpath-999');
+        Filesystem::ensureDir($path2);
+        Filesystem::ensureDir($path2 . '/subdir');
+        Filesystem::htDeny($path2);
+        Filesystem::htDeny($path2 . '/subdir');
+        file_put_contents($path2 . '/xyz', 'xyz');
+
+        $countBefore = count(Filesystem::list($path2, '*', null, PHP_INT_MAX));
+        $this->assertSame(2, $countBefore);
+        Filesystem::emptyDir($path2, true);
+        $this->assertSame(false, is_dir($path2 . '/subdir'));
     }
 
     /**
@@ -387,36 +459,414 @@ class FilesystemTest extends TestCase
         $this->assertEquals(null, $result);
     }
 
-    public function testEnsure(): void
+    public function testEnsureRelative(): void
     {
-        $dir = Filesystem::ensureRelative(__DIR__);
-        $expected = Filesystem::concat('wp-content', 'plugins', 'gbg-cake5', 'tests', 'Wrapper');
-        $this->assertEquals($expected, $dir);
 
-        $dir = Filesystem::ensureRelative('plugins/xyz/');
-        $expected = str_replace('/', DIRECTORY_SEPARATOR, 'plugins/xyz/');
-        $this->assertEquals($expected, $dir);
+        // simple test without base path
 
-        $dir = Filesystem::ensureAbsolute(__DIR__);
-        $expected = Filesystem::concat(WP_CONTENT_DIR, 'plugins', 'gbg-cake5', 'tests', 'Wrapper');
-        $this->assertEquals($expected, $dir);
+        $this->assertSame('', Filesystem::ensureRelative(''));
+        $this->assertSame('', Filesystem::ensureRelative('', '', '/'));
+        $this->assertSame('.', Filesystem::ensureRelative('.', '', '\\'));
+        $this->assertSame('a', Filesystem::ensureRelative('a', '', '\\'));
+        $this->assertSame('\\', Filesystem::ensureRelative('/', '', '\\'));
+        $this->assertSame('/', Filesystem::ensureRelative('/', '', '/'));
 
-        $dir = Filesystem::ensureAbsolute('plugins/xyz');
-        $expected = Filesystem::concat(ABSPATH, 'plugins/xyz');
-        $this->assertEquals($expected, $dir);
+        // simple test with base path ``
+        $tests = [
+            '' => '',
+            '/' => '/',
+            'bla' => 'bla',
+            '/bla' => '/bla',
+            '/bla/' => '/bla/',
+            '/blablebli' => '/blablebli',
+            'bla/ble/bli' => 'bla/ble/bli',
+            '/bla/ble/bli' => '/bla/ble/bli',
+            '/bla//ble/bli' => '/bla/ble/bli',
+            '/bla/ble/bli/' => '/bla/ble/bli/',
+            'bla/ble/bli/' => 'bla/ble/bli/',
+        ];
 
-        $dir = Filesystem::ensureAbsolute('/plugins/xyz');
-        $expected = Filesystem::concat(ABSPATH, 'plugins/xyz');
-        $this->assertEquals($expected, $dir);
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '', '\\'), 'test ' . $test);
+        }
 
-        $dir = Filesystem::ensureAbsolute('/plugins/xyz/');
-        $expected = Filesystem::concat(ABSPATH, 'plugins/xyz/');
-        $this->assertEquals($expected, $dir);
+        // simple test with base path `/`
 
-        $dir = Filesystem::ensureAbsolute('plugins/xyz/');
-        $expected = Filesystem::concat(ABSPATH, 'plugins/xyz/');
-        $this->assertEquals($expected, $dir);
+        $tests = [
+            '' => '',
+            '/' => '',
+            'bla' => 'bla',
+            '/bla' => 'bla',
+            '/bla/' => 'bla/',
+            '//bla/' => '/bla/',
+            '/blablebli' => 'blablebli',
+            'bla/ble/bli' => 'bla/ble/bli',
+            '/bla/ble/bli' => 'bla/ble/bli',
+            '/bla/ble/bli/' => 'bla/ble/bli/',
+            '/bla//ble/bli/' => 'bla/ble/bli/',
+            '//bla/ble/bli/' => '/bla/ble/bli/',
+            'bla/ble/bli/' => 'bla/ble/bli/',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/', '\\'), 'test ' . $test);
+        }
+
+        // simple test with base path `/bla`
+
+        $tests = [
+            '' => '',
+            '/' => '/',
+            'bla' => 'bla',
+            '/bla' => '',
+            '/bla/' => '/',
+            '/bla//' => '/',
+            '//bla/' => '//bla/',
+            '/blablebli' => '/blablebli',
+            'bla/ble/bli' => 'bla/ble/bli',
+            '/bla/ble/bli' => '/ble/bli',
+            '/bla/ble/bli/' => '/ble/bli/',
+            '/bla//ble/bli/' => '/ble/bli/',
+            '//bla/ble/bli/' => '//bla/ble/bli/',
+            '////bla/ble/bli/' => '//bla/ble/bli/',
+            '///////bla/ble/bli/' => '//bla/ble/bli/',
+            '\\\\bla/ble/bli/' => '//bla/ble/bli/',
+            '\\bla/ble/bli/' => '/ble/bli/',
+            'bla/ble/bli/' => 'bla/ble/bli/',
+            '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\\\\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '//😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/bla', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/bla', '\\'), 'test ' . $test);
+        }
+
+        // simple test with base path `/bla/ble`
+
+        $tests = [
+            '' => '',
+            '/' => '/',
+            'bla' => 'bla',
+            '/bla' => '/bla',
+            '/bla/' => '/bla/',
+            '/bla//' => '/bla/',
+            '//bla/' => '//bla/',
+            '/blablebli' => '/blablebli',
+            '/bla/blebli' => '/bla/blebli',
+            '/bla/ble/bli' => '/bli',
+            'bla/ble/bli' => 'bla/ble/bli',
+            '/bla/ble/bli/' => '/bli/',
+            '/bla//ble/bli/' => '/bli/',
+            '/bla//ble///bli/' => '/bli/',
+            '//bla/ble/bli/' => '//bla/ble/bli/',
+            '\\\\bla/ble/bli/' => '//bla/ble/bli/',
+            '\\bla/ble/bli/' => '/bli/',
+            'bla/ble/bli/' => 'bla/ble/bli/',
+            '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/bla/ble', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/bla/ble', '\\'), 'test ' . $test);
+        }
+
+        $tests = [
+            '' => '',
+            '/' => '/',
+            'bla' => 'bla',
+            '/bla' => '/bla',
+            '/bla/' => '/bla/',
+            '/bla//' => '/bla/',
+            '//bla/' => '//bla/',
+            '/blablebli' => '/blablebli',
+            '/bla/blebli' => '/bla/blebli',
+            '/bla☮️/ble😝/bli' => '/bli',
+            '/bla☮️/ble😝/bli/' => '/bli/',
+            '/bla☮️/ble😝//bli/' => '/bli/',
+            '/////bla☮️/ble😝//bli/' => '//bla☮️/ble😝/bli/',
+            '\\\\/bla☮️/ble😝//bli/' => '//bla☮️/ble😝/bli/',
+            '\\bla/ble/bli/' => '/bla/ble/bli/',
+            'bla/ble/bli/' => 'bla/ble/bli/',
+            '/bla☮️/ble😝//😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/bla☮️/ble😝', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '/bla☮️/ble😝', '\\'), 'test ' . $test);
+        }
+
+        $tests = [
+            '' => '',
+            '/' => '/',
+            'c:\\a\b\cbla' => 'c:/a/b/cbla',
+            'c:\\a\b\c\\/bla' => 'bla',
+            '/bla/' => '/bla/',
+            '/bla//' => '/bla/',
+            '//bla/' => '//bla/',
+            '/blablebli' => '/blablebli',
+            '/bla/blebli' => '/bla/blebli',
+            'c:\\a\b\c\\/bla☮️/ble😝/bli' => 'bla☮️/ble😝/bli',
+            'c:\\a\b\c\\/bla☮️/ble😝//😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => 'bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            'c:\\a\b\c\\\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => 'bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, 'c:\\a\b\c\\', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, 'c:\\a\b\c\\', '\\'), 'test ' . $test);
+        }
     }
+
+
+    public function testEnsureAbsolute(): void
+    {
+
+        // simple test without base path
+
+        $this->assertSame(Filesystem::normalize(ABSPATH), Filesystem::ensureAbsolute(''));
+        $this->assertSame(Filesystem::normalize(ABSPATH), Filesystem::ensureAbsolute('/'));
+        $this->assertSame(Filesystem::normalize(ABSPATH), Filesystem::ensureAbsolute('//'));
+
+        $this->assertSame(Filesystem::normalize(ABSPATH), Filesystem::ensureAbsolute('//////'));
+        $this->assertSame(Filesystem::normalize('/www/website/'), Filesystem::ensureAbsolute('', '/www/website/'));
+        $this->assertSame(Filesystem::normalize('/www/website/'), Filesystem::ensureAbsolute('///', '/www/website/'));
+
+        $this->assertSame('', Filesystem::ensureAbsolute('', '', '/'));
+        $this->assertSame('.', Filesystem::ensureAbsolute('.', '', '\\'));
+        $this->assertSame('a', Filesystem::ensureAbsolute('a', '', '\\'));
+        $this->assertSame('\\', Filesystem::ensureAbsolute('/', '', '\\'));
+        $this->assertSame('/', Filesystem::ensureAbsolute('/', '', '/'));
+
+        // simple test with base path ``
+        $tests = [
+            '' => '',
+            '/' => '/',
+            'bla' => 'bla',
+            '/bla' => '/bla',
+            '/bla/' => '/bla/',
+            '/blablebli' => '/blablebli',
+            'bla/ble/bli' => 'bla/ble/bli',
+            '/bla/ble/bli' => '/bla/ble/bli',
+            '/bla//ble/bli' => '/bla/ble/bli',
+            '/bla/ble/bli/' => '/bla/ble/bli/',
+            'bla/ble/bli/' => 'bla/ble/bli/',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureRelative($test, '', '\\'), 'test ' . $test);
+        }
+
+        // simple test with base path `/`
+
+        $tests = [
+            '' => '/',
+            '/' => '/',
+            'bla' => '/bla',
+            '/bla' => '/bla',
+            '/bla/' => '/bla/',
+            '//bla/' => '//bla/',
+            '/blablebli' => '/blablebli',
+            'bla/ble/bli' => '/bla/ble/bli',
+            '/bla/ble/bli' => '/bla/ble/bli',
+            '/bla/ble/bli/' => '/bla/ble/bli/',
+            '/bla//ble//bli/' => '/bla/ble/bli/',
+            '//bla/ble/bli/' => '//bla/ble/bli/',
+            'bla/ble/bli/' => '/bla/ble/bli/',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/', '\\'), 'test ' . $test);
+        }
+
+        // simple test with base path `/bla`
+
+        $tests = [
+            '' => '/bla',
+            '/' => '/bla/',
+            'bla' => '/bla/bla',
+            '/bla' => '/bla',
+            '/bla/' => '/bla/',
+            '/bla//' => '/bla/',
+            '//bla/' => '/bla/bla/',
+            '/blablebli' => '/bla/blablebli',
+            'bla/ble/bli' => '/bla/bla/ble/bli',
+            '/bla/ble/bli' => '/bla/ble/bli',
+            '/bla/ble/bli/' => '/bla/ble/bli/',
+            '/bla//ble/bli/' => '/bla/ble/bli/',
+            '//bla/ble/bli/' => '/bla/bla/ble/bli/',
+            '\\\\bla/ble/bli/' => '/bla/bla/ble/bli/',
+            '\\bla/ble/bli/' => '/bla/ble/bli/',
+            'bla/ble/bli/' => '/bla/bla/ble/bli/',
+            '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/bla', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/bla', '\\'), 'test ' . $test);
+        }
+
+        // simple test with base path `/bla/ble`
+
+        $tests = [
+            '' => '/bla/ble',
+            '/' => '/bla/ble/',
+            'bla' => '/bla/ble/bla',
+            '/bla' => '/bla/ble/bla',
+            '/bla/' => '/bla/ble/bla/',
+            '/bla//' => '/bla/ble/bla/',
+            '//bla/' => '/bla/ble/bla/',
+            '/blablebli' => '/bla/ble/blablebli',
+            '/bla/blebli' => '/bla/ble/bla/blebli',
+            '/bla/ble/bli' => '/bla/ble/bli',
+            'bla/ble/bli' => '/bla/ble/bla/ble/bli',
+            '/bla/ble/bli/' => '/bla/ble/bli/',
+            '/bla//ble/bli/' => '/bla/ble/bli/',
+            '//bla/ble/bli/' => '/bla/ble/bla/ble/bli/',
+            '\\\\bla/ble/bli/' => '/bla/ble/bla/ble/bli/',
+            '\\bla/ble/bli/' => '/bla/ble/bli/',
+            'bla/ble/bli/' => '/bla/ble/bla/ble/bli/',
+            '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/bla/ble', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/bla/ble', '\\'), 'test ' . $test);
+        }
+
+        $tests = [
+            '' => '/bla☮️/ble😝',
+            '/' => '/bla☮️/ble😝/',
+            'bla' => '/bla☮️/ble😝/bla',
+            '/bla' => '/bla☮️/ble😝/bla',
+            '/bla/' => '/bla☮️/ble😝/bla/',
+            '/bla//' => '/bla☮️/ble😝/bla/',
+            '//bla/' => '/bla☮️/ble😝/bla/',
+            '/blablebli' => '/bla☮️/ble😝/blablebli',
+            '/bla/blebli' => '/bla☮️/ble😝/bla/blebli',
+            '/bla☮️/ble😝/bli' => '/bla☮️/ble😝/bli',
+            '/bla☮️/ble😝/bli/' => '/bla☮️/ble😝/bli/',
+            '/bla☮️/ble😝//bli/' => '/bla☮️/ble😝/bli/',
+            '/////bla☮️/ble😝//bli/' => '/bla☮️/ble😝/bla☮️/ble😝/bli/',
+            '\\\\/bla☮️/ble😝//bli/' => '/bla☮️/ble😝/bla☮️/ble😝/bli/',
+            '\\bla/ble/bli/' => '/bla☮️/ble😝/bla/ble/bli/',
+            'bla/ble/bli/' => '/bla☮️/ble😝/bla/ble/bli/',
+            '/bla☮️/ble😝//😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => '/bla☮️/ble😝/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '/bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/bla☮️/ble😝', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '/bla☮️/ble😝', '\\'), 'test ' . $test);
+        }
+
+        $tests = [
+            '' => '//😭bla☮️/ble😝',
+            '/' => '//😭bla☮️/ble😝/',
+            'bla' => '//😭bla☮️/ble😝/bla',
+            '/bla' => '//😭bla☮️/ble😝/bla',
+            '/bla/' => '//😭bla☮️/ble😝/bla/',
+            '/bla//' => '//😭bla☮️/ble😝/bla/',
+            '//bla/' => '//😭bla☮️/ble😝/bla/',
+            '/blablebli' => '//😭bla☮️/ble😝/blablebli',
+            '/bla/blebli' => '//😭bla☮️/ble😝/bla/blebli',
+
+            '/bla☮️/ble😝/bli' => '//😭bla☮️/ble😝/bla☮️/ble😝/bli',
+            '/bla☮️/ble😝/bli/' => '//😭bla☮️/ble😝/bla☮️/ble😝/bli/',
+            '/bla☮️/ble😝//bli/' => '//😭bla☮️/ble😝/bla☮️/ble😝/bli/',
+
+            '//😭bla☮️/ble😝/bli' => '//😭bla☮️/ble😝/bli',
+            '//😭bla☮️/ble😝bli/' => '//😭bla☮️/ble😝/😭bla☮️/ble😝bli/',
+            '//😭bla☮️/ble😝//bli/' => '//😭bla☮️/ble😝/bli/',
+
+            '/////bla☮️/ble😝//bli/' => '//😭bla☮️/ble😝/bla☮️/ble😝/bli/',
+            '\\\\/bla☮️/ble😝//bli/' => '//😭bla☮️/ble😝/bla☮️/ble😝/bli/',
+            '\\bla/ble/bli/' => '//😭bla☮️/ble😝/bla/ble/bli/',
+            'bla/ble/bli/' => '//😭bla☮️/ble😝/bla/ble/bli/',
+            '/bla☮️/ble😝//😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '//😭bla☮️/ble😝/bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => '//😭bla☮️/ble😝/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '//😭bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '//😭bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => '//😭bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '//😭bla☮️/ble😝', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, '//😭bla☮️/ble😝', '\\'), 'test ' . $test);
+        }
+
+        $tests = [
+            '' => 'c://a/b/c/',
+            '/' => 'c://a/b/c/',
+            'c:\\\\a\b\cbla' => 'c://a/b/c/c:/a/b/cbla',
+            'c:\\\\a\b\c\\/bla' => 'c://a/b/c/bla',
+            '/bla/' => 'c://a/b/c/bla/',
+            '/bla//' => 'c://a/b/c/bla/',
+            '//bla/' => 'c://a/b/c/bla/',
+            '/blablebli' => 'c://a/b/c/blablebli',
+            '/bla/blebli' => 'c://a/b/c/bla/blebli',
+            'c:\\\\a\b\c\\/bla☮️/ble😝/bli' => 'c://a/b/c/bla☮️/ble😝/bli',
+            'c:\\\\a\b\c\\/bla☮️/ble😝//😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => 'c://a/b/c/bla☮️/ble😝/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            'c:\\\\a\b\c\\\\bla\\ble/😝☮️\\嗨مرحباً/Sa^lut*/مرحباً' => 'c://a/b/c/bla/ble/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => 'c://a/b/c/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '/😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => 'c://a/b/c/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+            '\\😝☮️/嗨مرحباً/Sa^lut*/مرحباً' => 'c://a/b/c/😝☮️/嗨مرحباً/Sa^lut*/مرحباً',
+        ];
+
+        foreach ($tests as $test => $expected) {
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, 'c:\\\\a\b\c\\', '/'), 'test ' . $test);
+            $expected = str_replace('/', '\\', $expected);
+            $this->assertSame($expected, Filesystem::ensureAbsolute($test, 'c:\\\\a\b\c\\', '\\'), 'test ' . $test);
+        }
+    }
+
 
     public function testCreateEmptyDir(): void
     {
@@ -474,6 +924,12 @@ class FilesystemTest extends TestCase
         $this->assertEquals(3, $stats['count']);
         $this->assertEquals($oldest, $stats['oldest']);
         $this->assertEquals($newest, $stats['newest']);
+
+        // test `listFiles` option
+        $stats = Filesystem::getFileStats(__DIR__ . '/test' . $i, '*', ['listFiles' => true]);
+        $this->assertSame(true, !empty($stats['list']));
+        // @phpstan-ignore-next-line
+        $this->assertSame(3, count($stats['list']));
 
         Filesystem::removeDir(__DIR__ . '/test' . $i);
 
